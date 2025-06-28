@@ -1,0 +1,44 @@
+import { useEffect, useState } from "react"; import { ethers } from "ethers"; import { Button } from "@/components/ui/button";
+
+const CONTRACT_ADDRESS = "0x6027a46DD32C355Ccc9316c785730a117210E92c";
+
+export default function KaotixcaCoinApp() { const [wallet, setWallet] = useState(null); const [account, setAccount] = useState(null); const [balance, setBalance] = useState(null);
+
+useEffect(() => { if (window.ethereum) { setWallet(new ethers.providers.Web3Provider(window.ethereum)); } }, []);
+
+const connectWallet = async () => { try { const accounts = await wallet.send("eth_requestAccounts", []); setAccount(accounts[0]); const bal = await wallet.getBalance(accounts[0]); setBalance(ethers.utils.formatEther(bal)); } catch (error) { console.error("Wallet connection error:", error); } };
+
+return ( <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4"> <h1 className="text-4xl font-bold mb-6">Kaotixca Coin</h1> <p className="mb-4 text-center max-w-lg"> Welcome to the official KaotixcaCoin dApp. Connect your wallet to see your Ethereum balance and learn more about Jay Kaotixca’s music. </p>
+
+<Button onClick={connectWallet} className="mb-4">
+    {account ? "Wallet Connected" : "Connect Wallet"}
+  </Button>
+
+  {account && (
+    <div className="text-center">
+      <p className="mb-2">Connected Wallet: {account}</p>
+      <p>Balance: {balance} ETH</p>
+    </div>
+  )}
+
+  <div className="mt-8 text-center">
+    <p className="mb-2">🎧 Listen to Jay Kaotixca:</p>
+    <a
+      className="underline text-blue-400 block"
+      href="https://www.bandlab.com/jaykaotixcamuzik"
+      target="_blank"
+    >BandLab</a>
+    <a
+      className="underline text-blue-400 block"
+      href="https://music.apple.com/us/artist/jay-kaotixca/1511542847"
+      target="_blank"
+    >Apple Music</a>
+    <a
+      className="underline text-blue-400 block"
+      href="https://open.spotify.com/artist/4xv3OLntL4AOKcsCacfJoZ?si=ebL40YScQPipGhaeDcldgA"
+      target="_blank"
+    >Spotify</a>
+  </div>
+</div>
+
+); }
