@@ -1,70 +1,52 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 
-const CONTRACT_ADDRESS = "0x6027a46DD32C355Ccc9316c785730a117210E92c";
-const ABI = [
+const tokenAddress = "0x6027a46DD32C355Ccc9316c785730a117210E92c"; // KXCA token address
+const tokenABI = [
   "function name() view returns (string)",
   "function symbol() view returns (string)",
   "function totalSupply() view returns (uint256)",
-  "function balanceOf(address) view returns (uint256)",
-  "function transfer(address to, uint amount) returns (bool)"
+  "function balanceOf(address) view returns (uint)"
 ];
 
 function App() {
-  const [wallet, setWallet] = useState(null);
-  const [contract, setContract] = useState(null);
-  const [supply, setSupply] = useState("0");
-  const [balance, setBalance] = useState("0");
-  const [sendTo, setSendTo] = useState("");
-  const [amount, setAmount] = useState("");
+  const [account, setAccount] = useState(null);
+  const [balance, setBalance] = useState(0);
+  const [symbol, setSymbol] = useState("");
+  const [supply, setSupply] = useState(0);
 
   async function connectWallet() {
     if (window.ethereum) {
       const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
-      const c = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
-      setWallet(await signer.getAddress());
-      setContract(c);
-
-      const total = await c.totalSupply();
-      setSupply(ethers.formatUnits(total, 18));
-
-      const bal = await c.balanceOf(await signer.getAddress());
+      const address = await signer.getAddress();
+      setAccount(address);
+      const token = new ethers.Contract(tokenAddress, tokenABI, provider);
+      const bal = await token.balanceOf(address);
+      const sym = await token.symbol();
+      const total = await token.totalSupply();
       setBalance(ethers.formatUnits(bal, 18));
-    }
-  }
-
-  async function sendKXCA() {
-    if (contract && sendTo && amount) {
-      const tx = await contract.transfer(sendTo, ethers.parseUnits(amount, 18));
-      await tx.wait();
-      alert(`Sent ${amount} KXCA`);
+      setSymbol(sym);
+      setSupply(ethers.formatUnits(total, 18));
     }
   }
 
   return (
-    <div style={{ padding: 20, fontFamily: 'sans-serif', backgroundColor: '#000', color: '#fff', minHeight: '100vh' }}>
+    <div className="container">
       <h1>KaotixcaCoin (KXCA)</h1>
-      {!wallet ? (
-        <button onClick={connectWallet}>Connect Wallet</button>
-      ) : (
+      <p>Smart Contract: {tokenAddress}</p>
+      <button onClick={connectWallet}>Connect Wallet</button>
+      {account && (
         <div>
-          <p><strong>Wallet:</strong> {wallet}</p>
-          <p><strong>Total Supply:</strong> {supply} KXCA</p>
-          <p><strong>Your Balance:</strong> {balance} KXCA</p>
-
-          <input placeholder="To Address" value={sendTo} onChange={e => setSendTo(e.target.value)} style={{ color: '#000' }} /><br />
-          <input placeholder="Amount" value={amount} onChange={e => setAmount(e.target.value)} style={{ color: '#000' }} /><br />
-          <button onClick={sendKXCA}>Send KXCA</button>
+          <p>Wallet: {account}</p>
+          <p>Balance: {balance} {symbol}</p>
+          <p>Total Supply: {supply} {symbol}</p>
         </div>
       )}
-
-      <div style={{ marginTop: 20 }}>
-        <a href="https://open.spotify.com/artist/4xv3OLntL4AOKcsCacfJoZ?si=ebL40YScQPipGhaeDcldgA" style={{ color: '#1DB954' }}>Spotify</a><br />
-        <a href="https://music.apple.com/us/artist/jay-kaotixca/1511542847" style={{ color: '#fa5b5b' }}>Apple Music</a><br />
-        <a href="https://www.bandlab.com/jaykaotixcamuzik" style={{ color: '#facc15' }}>BandLab</a>
+      <div className="links">
+        <a href="https://www.bandlab.com/jaykaotixcamuzik" target="_blank">BandLab</a> | 
+        <a href="https://music.apple.com/us/artist/jay-kaotixca/1511542847" target="_blank">Apple Music</a> | 
+        <a href="https://open.spotify.com/artist/4xv3OLntL4AOKcsCacfJoZ" target="_blank">Spotify</a>
       </div>
     </div>
   );
